@@ -263,8 +263,8 @@ case class ColumnarBroadcastExchangeExec(mode: BroadcastMode, child: SparkPlan) 
     copy(child = newChild)
 }
 
-class ColumnarBroadcastExchangeAdaptor(mode: BroadcastMode, child: SparkPlan)
-    extends BroadcastExchangeExec(mode, child) {
+case class ColumnarBroadcastExchangeAdaptor(mode: BroadcastMode, child: SparkPlan)
+    extends BroadcastExchangeLike(mode, child) {
   val plan: ColumnarBroadcastExchangeExec = new ColumnarBroadcastExchangeExec(mode, child)
 
   override def supportsColumnar = true
@@ -310,4 +310,8 @@ class ColumnarBroadcastExchangeAdaptor(mode: BroadcastMode, child: SparkPlan)
       (that canEqual this) && super.equals(that)
     case _ => false
   }
+
+  // For spark3.2.
+  override protected def withNewChildInternal(newChild: SparkPlan): ColumnarBroadcastExchangeAdaptor =
+    copy(child = newChild)
 }
