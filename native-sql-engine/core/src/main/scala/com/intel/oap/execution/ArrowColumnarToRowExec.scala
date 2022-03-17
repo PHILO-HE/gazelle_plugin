@@ -22,6 +22,7 @@ import com.intel.oap.vectorized.{ArrowColumnarToRowJniWrapper, ArrowWritableColu
 import org.apache.arrow.vector.types.pojo.{Field, Schema}
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.catalyst.InternalRow
+import org.apache.spark.sql.catalyst.expressions.codegen.CodegenContext
 import org.apache.spark.sql.catalyst.expressions.{Attribute, SortOrder, UnsafeProjection, UnsafeRow}
 import org.apache.spark.sql.catalyst.plans.physical.Partitioning
 import org.apache.spark.sql.execution.datasources.v2.arrow.SparkMemoryUtils
@@ -43,6 +44,14 @@ case class ArrowColumnarToRowExec(child: SparkPlan) extends UnaryExecNode with C
   override def outputPartitioning: Partitioning = child.outputPartitioning
 
   override def outputOrdering: Seq[SortOrder] = child.outputOrdering
+
+  override def inputRDDs(): Seq[RDD[InternalRow]] = {
+    Seq(child.executeColumnar().asInstanceOf[RDD[InternalRow]]) // Hack because of type erasure
+  }
+
+  override protected def doProduce(ctx: CodegenContext): String = {
+    throw new UnsupportedOperationException("Code gen is not supported!")
+  }
 
   buildCheck()
 
