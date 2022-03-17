@@ -20,23 +20,29 @@ package com.intel.oap.execution
 import com.intel.oap.expression.ConverterUtils
 import com.intel.oap.vectorized.{ArrowColumnarToRowJniWrapper, ArrowWritableColumnVector}
 import org.apache.arrow.vector.types.pojo.{Field, Schema}
-
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.catalyst.InternalRow
-import org.apache.spark.sql.catalyst.expressions.{UnsafeProjection, UnsafeRow}
+import org.apache.spark.sql.catalyst.expressions.{Attribute, SortOrder, UnsafeProjection, UnsafeRow}
+import org.apache.spark.sql.catalyst.plans.physical.Partitioning
 import org.apache.spark.sql.execution.datasources.v2.arrow.SparkMemoryUtils
 import org.apache.spark.sql.execution.metric.{SQLMetric, SQLMetrics}
-import org.apache.spark.sql.execution.{ColumnarToRowExec, SparkPlan}
+import org.apache.spark.sql.execution.{CodegenSupport, ColumnarToRowExec, SparkPlan, UnaryExecNode}
 import org.apache.spark.sql.types._
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable.ListBuffer
 import scala.concurrent.duration._
 
-class ArrowColumnarToRowExec(child: SparkPlan) extends ColumnarToRowExec(child = child) {
+case class ArrowColumnarToRowExec(child: SparkPlan) extends UnaryExecNode with CodegenSupport {
   override def nodeName: String = "ArrowColumnarToRow"
 
   override def supportCodegen: Boolean = false
+
+  override def output: Seq[Attribute] = child.output
+
+  override def outputPartitioning: Partitioning = child.outputPartitioning
+
+  override def outputOrdering: Seq[SortOrder] = child.outputOrdering
 
   buildCheck()
 
@@ -161,5 +167,8 @@ class ArrowColumnarToRowExec(child: SparkPlan) extends ColumnarToRowExec(child =
       (that canEqual this) && super.equals(that)
     case _ => false
   }
+
+  override protected def withNewChildInternal(newChild: SparkPlan): ArrowColumnarToRowExec =
+    copy(child = newChild)
 }
 
