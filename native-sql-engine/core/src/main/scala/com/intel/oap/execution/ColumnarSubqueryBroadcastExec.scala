@@ -91,7 +91,7 @@ case class ColumnarSubqueryBroadcastExec(
           }
         }
 
-        val iter = internalRowRDD.toLocalIterator[InternalRow]
+        val iter = internalRowRDD.toLocalIterator
 
         val proj = UnsafeProjection.create(output, output)
         val keyIter = iter.map(proj).map(_.copy())

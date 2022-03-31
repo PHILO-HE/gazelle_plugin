@@ -18,11 +18,13 @@
 package org.apache.spark.sql.execution.adaptive
 
 import org.apache.spark.sql.catalyst.expressions.{Alias, BindReferences, DynamicPruningExpression, Literal}
+import org.apache.spark.sql.catalyst.optimizer.{BuildLeft, BuildRight}
 import org.apache.spark.sql.catalyst.plans.logical.Aggregate
 import org.apache.spark.sql.catalyst.rules.Rule
+import org.apache.spark.sql.catalyst.trees.TreePattern._
 import org.apache.spark.sql.execution._
 import org.apache.spark.sql.execution.exchange.BroadcastExchangeExec
-import org.apache.spark.sql.execution.joins.{HashJoin, HashedRelationBroadcastMode}
+import org.apache.spark.sql.execution.joins.{BroadcastHashJoinExec, HashJoin, HashedRelationBroadcastMode}
 
 /**
   * A rule to insert dynamic pruning predicates in order to reuse the results of broadcast.
@@ -45,16 +47,16 @@ case class PlanAdaptiveDynamicPruningFilters(
         // plan a broadcast exchange of the build side of the join
         val exchange = BroadcastExchangeExec(mode, adaptivePlan.executedPlan)
 
-//        val canReuseExchange = conf.exchangeReuseEnabled && buildKeys.nonEmpty &&
-//          find(rootPlan) {
-//            case BroadcastHashJoinExec(_, _, _, BuildLeft, _, left, _, _) =>
-//              left.sameResult(exchange)
-//            case BroadcastHashJoinExec(_, _, _, BuildRight, _, _, right, _) =>
-//              right.sameResult(exchange)
-//            case _ => false
-//          }.isDefined
+        val canReuseExchange = conf.exchangeReuseEnabled && buildKeys.nonEmpty &&
+          find(rootPlan) {
+            case BroadcastHashJoinExec(_, _, _, BuildLeft, _, left, _, _) =>
+              left.sameResult(exchange)
+            case BroadcastHashJoinExec(_, _, _, BuildRight, _, _, right, _) =>
+              right.sameResult(exchange)
+            case _ => false
+          }.isDefined
 
-        val canReuseExchange = false
+//        val canReuseExchange = false
         if (canReuseExchange) {
           exchange.setLogicalLink(adaptivePlan.executedPlan.logicalLink.get)
           val newAdaptivePlan = adaptivePlan.copy(inputPlan = exchange)
