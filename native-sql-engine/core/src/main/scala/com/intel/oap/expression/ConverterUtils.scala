@@ -54,6 +54,7 @@ import java.nio.channels.{Channels, WritableByteChannel}
 
 import com.google.common.collect.Lists
 import java.io.{InputStream, OutputStream}
+import java.lang.IllegalArgumentException
 import java.util
 import java.util.concurrent.TimeUnit.SECONDS
 
@@ -476,6 +477,25 @@ object ConverterUtils extends Logging {
         .nullable(s"${attr.name}#${attr.exprId.id}", CodeGeneration.getResultType(attr.dataType))
     })
     new Schema(fields.toList.asJava)
+  }
+
+  // Get arrow schema with input schema considered for case insensitive tolerance.
+  def toArrowSchema(output: Seq[Attribute], inputSchema: Schema): Schema = {
+    val fields = output.map(attr => {
+      Field.nullable(replaceFieldName(s"${attr.name}#${attr.exprId.id}", inputSchema),
+          CodeGeneration.getResultType(attr.dataType))
+    })
+    new Schema(fields.toList.asJava)
+  }
+
+  // To align with the field name in input schema.
+  def replaceFieldName(name: String, schema: Schema): String = {
+    for (field <- schema.getFields.asScala) {
+      if (field.getName.equalsIgnoreCase(name)) {
+        return field.getName
+      }
+    }
+    throw new IllegalArgumentException("Field cannot be found!")
   }
 
   def toArrowSchema(schema: StructType): Schema = {
