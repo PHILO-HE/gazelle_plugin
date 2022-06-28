@@ -730,7 +730,7 @@ case class ColumnarHashAggregateExec(
       aggregateExpressions,
       aggregateAttributes,
       resultExpressions,
-      output,
+      ConverterUtils.alignWithInputAttribute(output, child.output),
       sparkConf)
   }
 

@@ -498,6 +498,21 @@ object ConverterUtils extends Logging {
     name
   }
 
+  def alignWithInputAttribute(output: Seq[Attribute], input: Seq[Attribute]): Seq[Attribute] = {
+    output.map(attr => {
+      attr.withName(replaceAttributeName(attr.name, input))
+    })
+  }
+
+  def replaceAttributeName(name: String, attrs: Seq[Attribute]): String = {
+    for (attr <- attrs) {
+      if (attr.name.equalsIgnoreCase(name)) {
+        return attr.name
+      }
+    }
+    name
+  }
+
   def toArrowSchema(schema: StructType): Schema = {
     val fields = schema
       .map(field => {
