@@ -495,7 +495,7 @@ object ConverterUtils extends Logging {
         return field.getName
       }
     }
-    throw new IllegalArgumentException("Field cannot be found!")
+    name
   }
 
   def toArrowSchema(schema: StructType): Schema = {
