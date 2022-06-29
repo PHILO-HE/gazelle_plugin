@@ -326,16 +326,16 @@ object ConverterUtils extends Logging {
       case a: AggregateExpression =>
         getAttrFromExpr(a.aggregateFunction.children(0))
       case a: AttributeReference =>
-        a
+        a.withName(a.name.toLowerCase())
       case a: Alias =>
         if (skipAlias) {
           if (a.child.isInstanceOf[AttributeReference] || a.child.isInstanceOf[Coalesce]) {
             getAttrFromExpr(a.child)
           } else {
-            a.toAttribute.asInstanceOf[AttributeReference]
+            a.toAttribute.asInstanceOf[AttributeReference].withName(a.name.toLowerCase())
           }
         } else {
-            a.toAttribute.asInstanceOf[AttributeReference]
+            a.toAttribute.asInstanceOf[AttributeReference].withName(a.name.toLowerCase())
         }
       case a: KnownFloatingPointNormalized =>
         logInfo(s"$a")
@@ -377,35 +377,36 @@ object ConverterUtils extends Logging {
     fieldExpr match {
       case a: Cast =>
         val c = getResultAttrFromExpr(a.child, name, Some(a.dataType))
-        AttributeReference(c.name, a.dataType, c.nullable, c.metadata)(c.exprId, c.qualifier)
+        AttributeReference(c.name.toLowerCase(), a.dataType, c.nullable,
+          c.metadata)(c.exprId, c.qualifier)
       case a: AttributeReference =>
         if (name != "None") {
-          new AttributeReference(name, a.dataType, a.nullable)()
+          new AttributeReference(name.toLowerCase(), a.dataType, a.nullable)()
         } else {
           a
         }
       case a: Alias =>
         if (name != "None") {
-          a.toAttribute.asInstanceOf[AttributeReference].withName(name)
+          a.toAttribute.asInstanceOf[AttributeReference].withName(name.toLowerCase())
         } else {
           a.toAttribute.asInstanceOf[AttributeReference]
         }
       case d: ColumnarDivide =>
-        new AttributeReference(name, DoubleType, d.nullable)()
+        new AttributeReference(name.toLowerCase(), DoubleType, d.nullable)()
       case m: ColumnarMultiply =>
-        new AttributeReference(name, m.dataType, m.nullable)()
+        new AttributeReference(name.toLowerCase(), m.dataType, m.nullable)()
       // for situation like: case when x = y
       case cet: ColumnarEqualTo =>
-        new AttributeReference(name, cet.dataType, cet.nullable)()
+        new AttributeReference(name.toLowerCase(), cet.dataType, cet.nullable)()
       case cin: ColumnarIn =>
-        new AttributeReference(name, cin.dataType, cin.nullable)()
+        new AttributeReference(name.toLowerCase(), cin.dataType, cin.nullable)()
       case cand: ColumnarAnd =>
-        new AttributeReference(name, cand.dataType, cand.nullable)()
+        new AttributeReference(name.toLowerCase(), cand.dataType, cand.nullable)()
       case cor: ColumnarOr =>
-        new AttributeReference(name, cor.dataType, cor.nullable)()
+        new AttributeReference(name.toLowerCase(), cor.dataType, cor.nullable)()
       case other =>
         val a = if (name != "None") {
-          new Alias(other, name)()
+          new Alias(other, name.toLowerCase())()
         } else {
           new Alias(other, "res")()
         }
@@ -473,8 +474,8 @@ object ConverterUtils extends Logging {
 
   def toArrowSchema(attributes: Seq[Attribute]): Schema = {
     val fields = attributes.map(attr => {
-      Field
-        .nullable(s"${attr.name}#${attr.exprId.id}", CodeGeneration.getResultType(attr.dataType))
+      Field.nullable(s"${attr.name.toLowerCase()}#${attr.exprId.id}",
+        CodeGeneration.getResultType(attr.dataType))
     })
     new Schema(fields.toList.asJava)
   }

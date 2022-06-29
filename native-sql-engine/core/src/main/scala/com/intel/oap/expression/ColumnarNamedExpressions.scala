@@ -57,7 +57,7 @@ class ColumnarAttributeReference(
 
   override def doColumnarCodeGen(args: java.lang.Object): (TreeNode, ArrowType) = {
     val resultType = CodeGeneration.getResultType(dataType)
-    val field = Field.nullable(s"${name}#${exprId.id}", resultType)
+    val field = Field.nullable(s"${name.toLowerCase()}#${exprId.id}", resultType)
     (TreeBuilder.makeField(field), resultType)
   }
 
