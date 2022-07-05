@@ -83,6 +83,9 @@ case class ColumnarHashAggregateExec(
   // Members declared in org.apache.spark.sql.execution.AliasAwareOutputPartitioning
   override protected def outputExpressions: Seq[NamedExpression] = resultExpressions
 
+  override def output: Seq[Attribute] =
+    resultExpressions.map(exp => exp.toAttribute.withName(exp.name.toLowerCase()))
+
   // Members declared in org.apache.spark.sql.execution.CodegenSupport
   protected def doProduce(ctx: CodegenContext): String = throw new UnsupportedOperationException()
 
