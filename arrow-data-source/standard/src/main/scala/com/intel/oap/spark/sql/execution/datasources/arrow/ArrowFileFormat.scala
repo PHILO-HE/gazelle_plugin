@@ -175,11 +175,15 @@ class ArrowFileFormat extends FileFormat with DataSourceRegister with Serializab
         factory.close()
       }))
 
+      val fields = requiredSchema.map(
+        requiredField => requiredField.copy(requiredField.name.toLowerCase()))
+      val resultSchema: StructType = StructType(fields.toArray)
+
       val itr = itrList
         .toIterator
         .flatMap(itr => itr.asScala)
         .map(batch => ArrowUtils.loadBatch(batch, file.partitionValues, partitionSchema,
-          requiredSchema))
+          resultSchema))
       new UnsafeItr(itr).asInstanceOf[Iterator[InternalRow]]
     }
   }

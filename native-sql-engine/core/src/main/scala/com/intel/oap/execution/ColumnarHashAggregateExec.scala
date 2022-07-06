@@ -21,7 +21,8 @@ import com.intel.oap.GazellePluginConfig
 import com.intel.oap.expression._
 import com.intel.oap.vectorized._
 import com.google.common.collect.Lists
-import java.util.concurrent.TimeUnit._
+
+import java.util.Locale
 
 import org.apache.arrow.gandiva.expression._
 import org.apache.arrow.gandiva.evaluator._
@@ -84,7 +85,7 @@ case class ColumnarHashAggregateExec(
   override protected def outputExpressions: Seq[NamedExpression] = resultExpressions
 
   override def output: Seq[Attribute] =
-    resultExpressions.map(exp => exp.toAttribute.withName(exp.name.toLowerCase()))
+    resultExpressions.map(exp => exp.toAttribute.withName(exp.name.toLowerCase(Locale.ROOT)))
 
   // Members declared in org.apache.spark.sql.execution.CodegenSupport
   protected def doProduce(ctx: CodegenContext): String = throw new UnsupportedOperationException()

@@ -1154,6 +1154,25 @@ class DataFrameAggregateSuite extends QueryTest
     val df = spark.sql(query)
     checkAnswer(df, Row(0, "0", 0, 0) :: Row(-1, "1", 1, 1) :: Row(-2, "2", 2, 2) :: Nil)
   }
+
+  test("Case insensitive for field name in group by") {
+    withSQLConf(
+      GazellePluginConfig.getSessionConf.ENABLE_HASH_AGG_FOR_STRING_TYPE_KEY -> "true",
+      SQLConf.CASE_SENSITIVE.key -> "false") {
+      withTempView("t1") {
+        sql("create temporary view t1 as select * from values('A'), ('B'), ('C') as t1(col1)")
+        // The group by key should be case insensitive.
+        var df = sql("select col1, count(*) from t1 group by COL1")
+        assert(find(df.queryExecution.executedPlan)(
+          _.isInstanceOf[ColumnarHashAggregateExec]).isDefined)
+        checkAnswer(df, Row("A", 1) :: Row("B", 1) :: Row("C", 1) :: Nil)
+        df = sql("select first(col1) from t1 group by COL1")
+        assert(find(df.queryExecution.executedPlan)(
+          _.isInstanceOf[ColumnarHashAggregateExec]).isDefined)
+        checkAnswer(df, Row("A") :: Row("B") :: Row("C") :: Nil)
+      }
+    }
+  }
 }
 
 case class B(c: Option[Double])

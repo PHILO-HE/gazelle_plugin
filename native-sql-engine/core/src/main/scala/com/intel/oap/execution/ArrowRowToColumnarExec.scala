@@ -77,7 +77,8 @@ case class ArrowRowToColumnarExec(child: SparkPlan) extends UnaryExecNode {
     "processTime" -> SQLMetrics.createTimingMetric(sparkContext, "time to convert")
   )
 
-  override def output: Seq[Attribute] = child.output
+  override def output: Seq[Attribute] =
+    child.output.map(exp => exp.toAttribute.withName(exp.name.toLowerCase()))
 
   override def outputPartitioning: Partitioning = child.outputPartitioning
 

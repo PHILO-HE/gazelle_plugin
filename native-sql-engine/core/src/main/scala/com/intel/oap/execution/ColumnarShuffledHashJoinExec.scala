@@ -17,7 +17,7 @@
 
 package com.intel.oap.execution
 
-import java.util.concurrent.TimeUnit._
+import java.util.Locale
 
 import com.intel.oap.vectorized._
 import com.intel.oap.GazellePluginConfig
@@ -192,9 +192,13 @@ case class ColumnarShuffledHashJoinExec(
 
   override def output: Seq[Attribute] =
     if (projectList == null || projectList.isEmpty) super.output
-    else projectList.map(_.toAttribute)
-
-
+    else {
+      if (conf.caseSensitiveAnalysis) {
+        projectList.map(_.toAttribute)
+      } else {
+        projectList.map(exp => exp.toAttribute.withName(exp.name.toLowerCase(Locale.ROOT)))
+      }
+    }
   def getBuildPlan: SparkPlan = buildPlan
   override def updateMetrics(out_num_rows: Long, process_time: Long): Unit = {
     val numOutputRows = longMetric("numOutputRows")

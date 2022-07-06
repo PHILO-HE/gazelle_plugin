@@ -131,7 +131,7 @@ object ArrowUtils {
   /** Maps schema from Spark to Arrow. NOTE: timeZoneId required for TimestampType in StructType */
   def toArrowSchema(schema: StructType, timeZoneId: String): Schema = {
     new Schema(schema.map { field =>
-      toArrowField(field.name, field.dataType, field.nullable, timeZoneId)
+      toArrowField(field.name.toLowerCase(), field.dataType, field.nullable, timeZoneId)
     }.asJava)
   }
 
