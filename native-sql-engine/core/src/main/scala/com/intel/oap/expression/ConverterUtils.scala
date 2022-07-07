@@ -480,40 +480,6 @@ object ConverterUtils extends Logging {
     new Schema(fields.toList.asJava)
   }
 
-  // Get arrow schema with input schema considered for case insensitive tolerance.
-  def toArrowSchema(output: Seq[Attribute], inputSchema: Schema): Schema = {
-    val fields = output.map(attr => {
-      Field.nullable(replaceFieldName(s"${attr.name}#${attr.exprId.id}", inputSchema),
-          CodeGeneration.getResultType(attr.dataType))
-    })
-    new Schema(fields.toList.asJava)
-  }
-
-  // To align with the field name in input schema.
-  def replaceFieldName(name: String, schema: Schema): String = {
-    for (field <- schema.getFields.asScala) {
-      if (field.getName.equalsIgnoreCase(name)) {
-        return field.getName
-      }
-    }
-    name
-  }
-
-  def alignWithInputAttribute(output: Seq[Attribute], input: Seq[Attribute]): Seq[Attribute] = {
-    output.map(attr => {
-      attr.withName(replaceAttributeName(attr.name, input))
-    })
-  }
-
-  def replaceAttributeName(name: String, attrs: Seq[Attribute]): String = {
-    for (attr <- attrs) {
-      if (attr.name.equalsIgnoreCase(name)) {
-        return attr.name
-      }
-    }
-    name
-  }
-
   def toArrowSchema(schema: StructType): Schema = {
     val fields = schema
       .map(field => {

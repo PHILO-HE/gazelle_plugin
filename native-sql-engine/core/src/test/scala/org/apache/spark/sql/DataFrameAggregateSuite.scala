@@ -1155,7 +1155,7 @@ class DataFrameAggregateSuite extends QueryTest
     checkAnswer(df, Row(0, "0", 0, 0) :: Row(-1, "1", 1, 1) :: Row(-2, "2", 2, 2) :: Nil)
   }
 
-  test("Case insensitive for field name in group by") {
+  test("Test case insensitive for group by key") {
     withSQLConf(
       GazellePluginConfig.getSessionConf.ENABLE_HASH_AGG_FOR_STRING_TYPE_KEY -> "true",
       SQLConf.CASE_SENSITIVE.key -> "false") {

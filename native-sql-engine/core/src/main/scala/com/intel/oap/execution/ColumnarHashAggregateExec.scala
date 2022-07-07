@@ -130,7 +130,7 @@ case class ColumnarHashAggregateExec(
         TreeBuilder
           .makeExpression(native_function, Field.nullable("result", new ArrowType.Int(32, true)))
       val hash_aggr_input_schema = ConverterUtils.toArrowSchema(child.output)
-      val hash_aggr_out_schema = ConverterUtils.toArrowSchema(output, hash_aggr_input_schema)
+      val hash_aggr_out_schema = ConverterUtils.toArrowSchema(output)
       val resultStructType = ArrowUtils.fromArrowSchema(hash_aggr_out_schema)
       val nativeKernel = new ExpressionEvaluator()
       nativeKernel
@@ -734,7 +734,7 @@ case class ColumnarHashAggregateExec(
       aggregateExpressions,
       aggregateAttributes,
       resultExpressions,
-      ConverterUtils.alignWithInputAttribute(output, child.output),
+      output,
       sparkConf)
   }
 
